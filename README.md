@@ -15,22 +15,27 @@ Minimal TypeScript Node service implementing a Scrape Job API with an API server
 
 ## Quick start
 
-Prerequisites: Node 18+, PostgreSQL (or Docker), Docker (optional).
+Prerequisites: Docker and Docker Compose.
 
-Install and run locally:
-
-```sh
-npm install
-npm run dev
-```
-
-Run with Docker Compose (starts API, worker, Postgres, Redis, MinIO):
+Start all services (API, worker, Postgres, Redis, MinIO):
 
 ```sh
 docker compose up --build
 ```
 
-**MinIO Console**: When running with Docker Compose, access the MinIO console at `http://localhost:9001` (default credentials: `minio`/`minio123`).
+Run database migrations:
+
+```sh
+docker compose exec api npm run migrate
+```
+
+View API logs:
+
+```sh
+docker compose logs api
+```
+
+**MinIO Console**: Access the MinIO console at `http://localhost:9001` (default credentials: `minio`/`minio123`).
 
 ## API Documentation
 
@@ -114,17 +119,17 @@ MINIO_SECRET_KEY=minio123
 
 ## Database & Migrations
 
-This project uses Knex for migrations. Common commands:
+This project uses Knex for migrations. Run migration commands inside the Docker container:
 
 ```sh
 # Run migrations
-npm run migrate
+docker compose exec api npm run migrate
 
 # Rollback last migration
-npm run migrate:rollback
+docker compose exec api npm run migrate:rollback
 
-# Create a new migration (script provided)
-npm run migrate:make -- migration_name
+# Create a new migration
+docker compose exec api npm run migrate:make -- migration_name
 ```
 
 See `migrations/` for existing migration files.
@@ -145,6 +150,34 @@ Key source files:
 
 ## Development
 
-- Run the API in dev mode: `npm run dev`
-- Build: `npm run build`
-- Start (production): `npm start`
+### Running Services
+
+```sh
+# Start all services
+docker compose up --build
+
+# View API logs
+docker compose logs api
+docker compose logs -f api
+
+# Restart a service
+docker compose restart api
+docker compose restart worker
+
+# Stop all services
+docker compose down
+```
+
+### Troubleshooting
+
+If jobs aren't processing, check the worker logs:
+
+```sh
+docker compose logs worker
+```
+
+### Building for Production
+
+```sh
+# Build the Docker image
+docker compose build
