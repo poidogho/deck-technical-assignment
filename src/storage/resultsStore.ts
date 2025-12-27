@@ -21,7 +21,17 @@ async function ensureMinIOInitialized(): Promise<Client | null> {
     return minioClient;
   }
 
+  logger.info(
+    {
+      useMinio: config.useMinio,
+      endpoint: config.minioEndpoint,
+      useMinioEnv: process.env.USE_MINIO,
+    },
+    'MinIO: checking configuration'
+  );
+
   if (!config.useMinio) {
+    logger.info('MinIO: disabled, using filesystem');
     minioInitialized = true;
     return null;
   }
@@ -47,14 +57,18 @@ async function ensureMinIOInitialized(): Promise<Client | null> {
       logger.info({ bucket: config.minioBucket }, 'MinIO: created bucket');
     }
     logger.info(
-      { endpoint: config.minioEndpoint, bucket: config.minioBucket },
-      'MinIO: initialized'
+      {
+        endpoint: url.hostname,
+        port: url.port || (url.protocol === 'https:' ? 443 : 80),
+        bucket: config.minioBucket,
+      },
+      'MinIO: initialized successfully'
     );
     minioInitialized = true;
     return minioClient;
   } catch (err) {
     logger.error(
-      { err },
+      { err, endpoint: config.minioEndpoint },
       'MinIO: failed to initialize, falling back to filesystem'
     );
     minioClient = null;
