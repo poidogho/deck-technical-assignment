@@ -2,15 +2,221 @@ openapi: 3.0.3
 info:
   title: Scrape Job API
   version: 0.1.0
+  description: API for submitting and tracking web scraping jobs
+servers:
+  - url: http://localhost:3000
+    description: Local development server
 paths:
   /jobs:
     post:
       summary: Submit a scrape job
+      description: Creates a new scraping job and queues it for processing
+      operationId: createJob
+      tags:
+        - Jobs
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL to scrape
+                  example: https://example.com/page
+                options:
+                  type: object
+                  description: Optional scraping configuration
+                  properties:
+                    wait_for:
+                      type: string
+                      example: networkidle
+      responses:
+        '202':
+          description: Job created and queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobCreated'
     get:
       summary: List jobs
+      description: List jobs for the authenticated API key with pagination
+      operationId: listJobs
+      tags:
+        - Jobs
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of items per page
+      responses:
+        '200':
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobList'
   /jobs/{id}:
     get:
       summary: Get job status
+      description: Retrieve the status and metadata of a specific job
+      operationId: getJob
+      tags:
+        - Jobs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Job ID
+          example: job_abc123
+      responses:
+        '200':
+          description: Job status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /jobs/{id}/result:
     get:
       summary: Get job result
+      description: Retrieve the extracted data for a completed job
+      operationId: getJobResult
+      tags:
+        - Jobs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Job ID
+          example: job_abc123
+      responses:
+        '200':
+          description: Job result data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResult'
+        '404':
+          description: Result not available (job pending, failed, or not found)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    JobCreated:
+      type: object
+      properties:
+        job_id:
+          type: string
+          example: job_abc123
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+          example: pending
+        status_url:
+          type: string
+          example: /jobs/job_abc123
+    JobStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          example: job_abc123
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+          example: completed
+        created_at:
+          type: string
+          format: date-time
+          example: '2025-01-15T10:30:00Z'
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2025-01-15T10:30:45Z'
+    JobResult:
+      type: object
+      properties:
+        job_id:
+          type: string
+          example: job_abc123
+        url:
+          type: string
+          format: uri
+          example: https://example.com/page
+        extracted_at:
+          type: string
+          format: date-time
+          example: '2025-01-15T10:30:45Z'
+        data:
+          type: object
+          description: Extracted data from the scraped page
+          additionalProperties: true
+          example:
+            title: Page Title
+            content: Extracted text content...
+            metadata:
+              author: deck
+              date: '2025-01-15T10:30:45Z'
+    JobList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobStatus'
+        page:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 42
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Job not found

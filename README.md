@@ -11,6 +11,7 @@ Minimal TypeScript Node service implementing a Scrape Job API with an API server
 - Structured logging and graceful shutdown
 - Docker Compose for local infra (Postgres, Redis, MinIO)
 - Result storage: MinIO object storage or local filesystem
+- OpenAPI/Swagger documentation
 
 ## Quick start
 
@@ -30,6 +31,20 @@ docker compose up --build
 ```
 
 **MinIO Console**: When running with Docker Compose, access the MinIO console at `http://localhost:9001` (default credentials: `minio`/`minio123`).
+
+## API Documentation
+
+Interactive API documentation is available via Swagger UI:
+
+- **Swagger UI**: `http://localhost:3000/docs` — Interactive API explorer with "Try it out" functionality
+- **OpenAPI JSON**: `http://localhost:3000/docs/openapi.json` — Machine-readable API specification
+- **OpenAPI YAML**: `http://localhost:3000/docs/openapi.yaml` — Human-readable API specification
+
+The API documentation includes:
+- All endpoint descriptions and parameters
+- Request/response schemas
+- Example requests and responses
+- Authentication requirements
 
 ## Environment
 
