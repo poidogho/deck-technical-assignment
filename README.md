@@ -176,8 +176,20 @@ If jobs aren't processing, check the worker logs:
 docker compose logs worker
 ```
 
-### Building for Production
+## Screenshots
 
-```sh
-# Build the Docker image
-docker compose build
+### Create a Job
+
+![Create a Job](images/createAJob.png)
+
+### Get a Job
+
+![Get a Job](images/getAJob.png)
+
+### Get Jobs
+
+![Get Jobs](images/getJobs.png)
+
+### MinIO
+
+![MinIO](images/minio.png)
