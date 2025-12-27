@@ -1,0 +1,36 @@
+{
+  "name": "deck-scrape-job-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "worker": "tsx src/worker/worker.ts",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "migrate": "NODE_OPTIONS='--loader tsx/esm' knex migrate:latest",
+    "migrate:rollback": "NODE_OPTIONS='--loader tsx/esm' knex migrate:rollback",
+    "migrate:make": "NODE_OPTIONS='--loader tsx/esm' knex migrate:make"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ioredis": "^5.8.2",
+    "knex": "^3.1.0",
+    "pg": "^8.16.3",
+    "pino": "^9.2.0",
+    "pino-http": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.7",
+    "@types/pg": "^8.16.0",
+    "eslint": "^9.1.0",
+    "tsx": "^4.12.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.2"
+  }
+}

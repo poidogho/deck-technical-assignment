@@ -1,0 +1,16 @@
+openapi: 3.0.3
+info:
+  title: Scrape Job API
+  version: 0.1.0
+paths:
+  /jobs:
+    post:
+      summary: Submit a scrape job
+    get:
+      summary: List jobs
+  /jobs/{id}:
+    get:
+      summary: Get job status
+  /jobs/{id}/result:
+    get:
+      summary: Get job result
