@@ -11,9 +11,9 @@
     "worker": "tsx src/worker/worker.ts",
     "lint": "eslint .",
     "test": "vitest run",
-    "migrate": "NODE_OPTIONS='--loader tsx/esm' knex migrate:latest",
-    "migrate:rollback": "NODE_OPTIONS='--loader tsx/esm' knex migrate:rollback",
-    "migrate:make": "NODE_OPTIONS='--loader tsx/esm' knex migrate:make"
+    "migrate": "NODE_OPTIONS='--import tsx/esm' knex migrate:latest",
+    "migrate:rollback": "NODE_OPTIONS='--import tsx/esm' knex migrate:rollback",
+    "migrate:make": "NODE_OPTIONS='--import tsx/esm' knex migrate:make"
   },
   "dependencies": {
     "@types/js-yaml": "^4.0.9",

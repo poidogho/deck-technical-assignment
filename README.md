@@ -46,6 +46,21 @@ The API documentation includes:
 - Example requests and responses
 - Authentication requirements
 
+## Testing
+
+See [TESTING.md](./TESTING.md) for a comprehensive testing guide with example requests and cache testing instructions.
+
+Quick test script:
+```sh
+./test-api.sh
+```
+
+This script will:
+- Create a new scrape job
+- Poll for job completion
+- Fetch the result (testing cache)
+- List all jobs
+
 ## Environment
 
 Create a `.env` file or set environment variables. Important variables:
