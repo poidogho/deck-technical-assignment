@@ -23,31 +23,47 @@ export type JobResult = {
 
 export const jobService = {
   async createJob(input: { apiKey: string; url: string; options?: unknown }): Promise<Job> {
-    const job = await jobRepository.create({
-      apiKey: input.apiKey,
-      url: input.url,
-      status: "pending"
-    });
+    try {
+      const job = await jobRepository.create({
+        apiKey: input.apiKey,
+        url: input.url,
+        status: "pending"
+      });
 
-    await queueClient.enqueue({ jobId: job.id, url: job.url, options: input.options });
+      await queueClient.enqueue({ jobId: job.id, url: job.url, options: input.options });
 
-    return job;
+      return job;
+    } catch (error) {
+      throw new Error("jobService.createJob failed", { cause: error as Error });
+    }
   },
 
   async getJob(id: string): Promise<Job | null> {
-    return jobRepository.findById(id);
+    try {
+      return await jobRepository.findById(id);
+    } catch (error) {
+      throw new Error("jobService.getJob failed", { cause: error as Error });
+    }
   },
 
   async getJobResult(id: string): Promise<JobResult | null> {
-    const job = await jobRepository.findById(id);
-    if (!job || job.status !== "completed") {
-      return null;
-    }
+    try {
+      const job = await jobRepository.findById(id);
+      if (!job || job.status !== "completed") {
+        return null;
+      }
 
-    return resultsStore.getResult(id);
+      return resultsStore.getResult(id);
+    } catch (error) {
+      throw new Error("jobService.getJobResult failed", { cause: error as Error });
+    }
   },
 
   async listJobs(params: { apiKey: string; page: number; pageSize: number }) {
-    return jobRepository.listByApiKey(params);
+    try {
+      return await jobRepository.listByApiKey(params);
+    } catch (error) {
+      throw new Error("jobService.listJobs failed", { cause: error as Error });
+    }
   }
 };

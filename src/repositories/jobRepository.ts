@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { db } from '../db/index.js';
 import type { Job, JobStatus } from '../services/jobService.js';
+import { retry } from '../utils/retry.js';
 
 interface JobRow {
   id: string;
@@ -31,21 +32,25 @@ export const jobRepository = {
     status: JobStatus;
   }): Promise<Job> {
     const id = `job_${randomUUID()}`;
-    const [row] = await db
-      .knex<JobRow>('jobs')
-      .insert({
-        id,
-        api_key: input.apiKey,
-        url: input.url,
-        status: input.status,
-      })
-      .returning('*');
+    const [row] = await retry('jobRepository.create', () =>
+      db
+        .knex<JobRow>('jobs')
+        .insert({
+          id,
+          api_key: input.apiKey,
+          url: input.url,
+          status: input.status,
+        })
+        .returning('*')
+    );
 
     return rowToJob(row);
   },
 
   async findById(id: string): Promise<Job | null> {
-    const row = await db.knex<JobRow>('jobs').where({ id }).first();
+    const row = await retry('jobRepository.findById', () =>
+      db.knex<JobRow>('jobs').where({ id }).first()
+    );
     if (!row) {
       return null;
     }
@@ -72,11 +77,13 @@ export const jobRepository = {
       updateData.result_location = input.resultLocation;
     }
 
-    const [row] = await db
-      .knex<JobRow>('jobs')
-      .where({ id: input.id })
-      .update(updateData)
-      .returning('*');
+    const [row] = await retry('jobRepository.updateStatus', () =>
+      db
+        .knex<JobRow>('jobs')
+        .where({ id: input.id })
+        .update(updateData)
+        .returning('*')
+    );
 
     if (!row) {
       return null;
@@ -92,19 +99,21 @@ export const jobRepository = {
   }) {
     const offset = (params.page - 1) * params.pageSize;
 
-    const [rows, countResult] = await Promise.all([
-      db
-        .knex<JobRow>('jobs')
-        .where({ api_key: params.apiKey })
-        .orderBy('created_at', 'desc')
-        .limit(params.pageSize)
-        .offset(offset),
-      db
-        .knex('jobs')
-        .where({ api_key: params.apiKey })
-        .count('* as total')
-        .first<{ total: string | number }>(),
-    ]);
+    const [rows, countResult] = await retry('jobRepository.listByApiKey', () =>
+      Promise.all([
+        db
+          .knex<JobRow>('jobs')
+          .where({ api_key: params.apiKey })
+          .orderBy('created_at', 'desc')
+          .limit(params.pageSize)
+          .offset(offset),
+        db
+          .knex('jobs')
+          .where({ api_key: params.apiKey })
+          .count('* as total')
+          .first<{ total: string | number }>(),
+      ])
+    );
 
     const total = Number((countResult?.total as string | number) ?? 0);
 
