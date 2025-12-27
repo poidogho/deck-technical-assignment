@@ -9,7 +9,8 @@ Minimal TypeScript Node service implementing a Scrape Job API with an API server
 - PostgreSQL (Knex) migrations
 - Redis-backed queue
 - Structured logging and graceful shutdown
-- Docker Compose for local infra
+- Docker Compose for local infra (Postgres, Redis, MinIO)
+- Result storage: MinIO object storage or local filesystem
 
 ## Quick start
 
@@ -28,15 +29,38 @@ Run with Docker Compose (starts API, worker, Postgres, Redis, MinIO):
 docker compose up --build
 ```
 
+**MinIO Console**: When running with Docker Compose, access the MinIO console at `http://localhost:9001` (default credentials: `minio`/`minio123`).
+
 ## Environment
 
 Create a `.env` file or set environment variables. Important variables:
 
-- `DATABASE_URL` — Postgres connection string (required)
-- `PORT` — API port (default: 3000)
-- `REDIS_URL` — Redis connection string (default: redis://localhost:6379)
-- `NODE_ENV` — environment (development|production)
-- `LOG_LEVEL` — logging level (info|debug|error)
+### Core Configuration
+
+- `DATABASE_URL` — Postgres connection string (default: `postgres://postgres:postgres@localhost:5432/deck`)
+- `PORT` — API port (default: `3000`)
+- `REDIS_URL` — Redis connection string (default: `redis://localhost:6379`)
+- `NODE_ENV` — environment (`development`|`production`, default: `development`)
+- `LOG_LEVEL` — logging level (`info`|`debug`|`error`, default: `info`)
+
+### Storage Configuration
+
+The service supports two storage backends for job results:
+
+1. **MinIO** (object storage) — used when `USE_MINIO=true` or when `MINIO_ENDPOINT` is set to a non-default value
+2. **Local filesystem** — fallback option
+
+MinIO variables:
+
+- `USE_MINIO` — enable MinIO storage (`true`|`false`, default: auto-detected)
+- `MINIO_ENDPOINT` — MinIO server endpoint (default: `http://localhost:9000`)
+- `MINIO_BUCKET` — MinIO bucket name (default: `results`)
+- `MINIO_ACCESS_KEY` — MinIO access key (default: `minio`)
+- `MINIO_SECRET_KEY` — MinIO secret key (default: `minio123`)
+
+Filesystem variables:
+
+- `RESULTS_DIR` — local directory for storing results (default: `./data/results`)
 
 Example `.env`:
 
@@ -46,6 +70,16 @@ PORT=3000
 REDIS_URL=redis://localhost:6379
 NODE_ENV=development
 LOG_LEVEL=info
+
+# MinIO storage (optional - will use filesystem if not configured)
+USE_MINIO=true
+MINIO_ENDPOINT=http://localhost:9000
+MINIO_BUCKET=results
+MINIO_ACCESS_KEY=minio
+MINIO_SECRET_KEY=minio123
+
+# Or use local filesystem storage
+# RESULTS_DIR=./data/results
 ```
 
 ## Database & Migrations

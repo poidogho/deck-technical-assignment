@@ -20,7 +20,7 @@ async function start() {
       logger.info('shutdown: starting cleanup');
       await queueClient.close();
       await db.close();
-      // TODO: flush logs.
+      await logger.flush();
     },
   });
 }
