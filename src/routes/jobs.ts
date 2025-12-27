@@ -1,12 +1,18 @@
 import { Router } from 'express';
 import { jobService } from '../services/jobService.js';
+import { validate } from '../middleware/validation.js';
+import {
+  validateCreateJob,
+  validateListJobs,
+  validateJobId,
+} from '../middleware/jobValidators.js';
 
 export const jobsRouter = Router();
 
 // POST /jobs - Create a new job
-jobsRouter.post('/', async (req, res) => {
-  const { url, options } = req.body ?? {};
-  const apiKey = req.header('x-api-key') ?? '';
+jobsRouter.post('/', validate(validateCreateJob), async (req, res) => {
+  const { url, options } = req.body;
+  const apiKey = req.header('x-api-key')!;
 
   const job = await jobService.createJob({ apiKey, url, options });
 
@@ -18,8 +24,8 @@ jobsRouter.post('/', async (req, res) => {
 });
 
 // GET /jobs - List jobs (must come before /:id routes)
-jobsRouter.get('/', async (req, res) => {
-  const apiKey = req.header('x-api-key') ?? '';
+jobsRouter.get('/', validate(validateListJobs), async (req, res) => {
+  const apiKey = req.header('x-api-key')!;
   const page = Number(req.query.page ?? 1);
   const pageSize = Number(req.query.page_size ?? 20);
 
@@ -28,7 +34,7 @@ jobsRouter.get('/', async (req, res) => {
 });
 
 // GET /jobs/:id/result - Get job result (must come before /:id)
-jobsRouter.get('/:id/result', async (req, res) => {
+jobsRouter.get('/:id/result', validate(validateJobId), async (req, res) => {
   const result = await jobService.getJobResult(req.params.id);
   if (!result) {
     res.status(404).json({ message: 'result not available' });
@@ -39,7 +45,7 @@ jobsRouter.get('/:id/result', async (req, res) => {
 });
 
 // GET /jobs/:id - Get job status
-jobsRouter.get('/:id', async (req, res) => {
+jobsRouter.get('/:id', validate(validateJobId), async (req, res) => {
   const job = await jobService.getJob(req.params.id);
   if (!job) {
     res.status(404).json({ message: 'job not found' });
